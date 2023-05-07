@@ -78,10 +78,53 @@ const createCSSFile = () => {
 };
 
 const copyAssetsFolder = () => {
+  const assetsFolder = path.join(__dirname, 'assets/');
+  const assetsProjectDist = path.join(__dirname, '/project-dist/assets');
 
+  return new Promise((resolve, reject) => {
+    fsPromises.access(assetsProjectDist)
+      .then(() => fsPromises.rm(assetsProjectDist, { recursive: true }))
+      .catch(() => {})
+      .then(() => fsPromises.mkdir(assetsProjectDist, { recursive: true }))
+      .then(() => {
+        console.log('Assets folder was created successfully');
+      });
+
+    const copyDir = (source, dest) => {
+      fs.readdir(source, { withFileTypes: true }, (err, files) => {
+        if (err) {
+          reject();
+          return;
+        }
+
+        files.forEach((directoryEntry) => {
+          const sourceEntry = path.join(source, directoryEntry.name);
+          const destEntry = path.join(dest, directoryEntry.name);
+
+          if (directoryEntry.isDirectory()) { // if folder
+            fs.mkdir(destEntry, { recursive: true }, (err) => {
+              if (err) {
+                reject();
+                return;
+              }
+              copyDir(sourceEntry, destEntry);
+            });
+          } else {
+            fs.copyFile(sourceEntry, destEntry, (err) => {
+              if (err) {
+                reject();
+              }
+            });
+          }
+        });
+        resolve();
+      });
+    };
+    copyDir(assetsFolder, assetsProjectDist);
+  });
 };
 
-Promise.all([createFolder(), createHTMLFile(), createCSSFile()])
+Promise.all([createFolder(), createHTMLFile(), createCSSFile(), copyAssetsFolder()])
   .then(() => {
     console.log('Build completed successfully');
   })
