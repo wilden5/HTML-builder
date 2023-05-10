@@ -17,7 +17,7 @@ const createHTMLFile = () => {
   const headerContent = fs.readFileSync(path.join(componentsFolder, 'header.html'), 'utf8');
 
   return new Promise((resolve, reject) => {
-    fs.readFile('template.html', 'utf-8', (error, data) => {
+    fs.readFile(path.join(__dirname, 'template.html'), 'utf-8', (error, data) => {
       if (error) {
         reject(error);
         return;
